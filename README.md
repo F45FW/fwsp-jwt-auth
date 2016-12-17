@@ -1,6 +1,6 @@
-# jwt-auth 
+# jwt-auth
 
-[![npm version](https://badge.fury.io/js/fwsp-jwt-auth.svg)](https://badge.fury.io/js/fwsp-jwt-auth) <span class="badge-npmdownloads"><a href="https://npmjs.org/package/fwsp-jwt-auth" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/fwsp-jwt-auth.svg" alt="NPM downloads" /></a></span> [![npm](https://img.shields.io/npm/l/fwsp-jwt-auth.svg)]() 
+[![npm version](https://badge.fury.io/js/fwsp-jwt-auth.svg)](https://badge.fury.io/js/fwsp-jwt-auth) <span class="badge-npmdownloads"><a href="https://npmjs.org/package/fwsp-jwt-auth" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/fwsp-jwt-auth.svg" alt="NPM downloads" /></a></span> [![npm](https://img.shields.io/npm/l/fwsp-jwt-auth.svg)]()
 
 [JSON Web Token](https://en.wikipedia.org/wiki/JSON_Web_Token) Authentication.
 
@@ -71,6 +71,14 @@ jwtAuth.refreshToken(token)
     // if original token was valid then a newToken is returned.
   });
 ```
+
+To retrieve a hash of an existing token:
+
+```javascript
+let hash = jwtAuth.getTokenHash(token);
+```
+
+This is useful when implementing a token management scheme.
 
 ### Creating private and public certificates
 You can use the supplied `keygen.sh` script to create certificates for use with jwt-auth.

@@ -190,4 +190,19 @@ describe('jwt-auth', () => {
       });
   });
 
+  it('should return a token hash given a token', (done) => {
+    jwtAuth.init({
+      tokenExpirationInSeconds: 5
+    });
+    jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then((result) => {
+        jwtAuth.createToken(payload)
+          .then((token) => {
+            let hash = jwtAuth.getTokenHash(token);
+            expect(hash).to.be.a('string');
+            expect(hash.length).to.equal(40);
+            done();
+          });
+      });
+  });
 });

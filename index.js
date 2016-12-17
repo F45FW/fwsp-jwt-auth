@@ -4,6 +4,7 @@
 const Promise = require('bluebird');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const crypto = require('crypto');
 
 class JWTToken {
   constructor() {
@@ -143,6 +144,18 @@ class JWTToken {
           reject(err);
         });
     });
+  }
+
+  /**
+  * @name getTokenHash
+  * @summary Return a Sha1 hash of the token
+  * @param {string} token - JSON web token
+  * @return {string} sha1 hash - in string hex format
+  */
+  getTokenHash(token) {
+    let sha1 = crypto.createHash('sha1');
+    sha1.update(token);
+    return sha1.digest('hex');
   }
 }
 

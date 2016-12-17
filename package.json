@@ -1,6 +1,6 @@
 {
   "name": "fwsp-jwt-auth",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "JSON Web Token Authentication Helper",
   "author": {
     "name": "Carlos Justiniano",
@@ -27,7 +27,8 @@
   },
   "devDependencies": {
     "chai": "3.5.0",
-    "eslint": "3.0.1",
-    "mocha": "2.5.3"
+    "eslint": "3.12.2",
+    "eslint-plugin-jasmine": "2.2.0",
+    "mocha": "3.2.0"
   }
 }

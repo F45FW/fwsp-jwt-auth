@@ -1,24 +1,20 @@
 {
-  "extends": "eslint:recommended",
+  "plugins": ["jasmine"],
+  "extends": ["eslint:recommended", "plugin:jasmine/recommended"],
   "parserOptions": {
     "ecmaVersion": 6,
     "ecmaFeatures": {
       "jsx": true
-    }
+    },
+    "sourceType": "module"
   },
   "rules": {
-    "valid-jsdoc": [
-      2,
-      {
-        "requireReturn": false
-      }
-    ],
-    "comma-dangle": 2,
+    "valid-jsdoc": [2, {
+     "requireReturn": false
+    }],
+    "comma-dangle": 0,
     "curly": 2,
-    "semi": [
-      2,
-      "always"
-    ],
+    "semi": [2, "always"],
     "no-console": 0,
     "no-debugger": 2,
     "no-extra-semi": 2,
@@ -91,7 +87,8 @@
   "env": {
     "browser": true,
     "node": true,
-    "es6": true
+    "es6": true,
+    "jasmine": true
   },
   "globals": {
     "-": 0
