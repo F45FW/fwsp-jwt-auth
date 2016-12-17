@@ -1,4 +1,4 @@
-# jwt-auth [![Build Status](https://travis-ci.org/flywheelsports/fwsp-jwt-auth.svg?branch=master)](https://travis-ci.org/flywheelsports/fwsp-jwt-auth)
+# jwt-auth [![npm version](https://badge.fury.io/js/fwsp-jwt-auth.svg)](https://badge.fury.io/js/fwsp-jwt-auth) [![Build Status](https://travis-ci.org/flywheelsports/fwsp-jwt-auth.svg?branch=master)](https://travis-ci.org/flywheelsports/fwsp-jwt-auth)
 [JSON Web Token](https://en.wikipedia.org/wiki/JSON_Web_Token) Authentication.
 
 ### Using jwt-auth
