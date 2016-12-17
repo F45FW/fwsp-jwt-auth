@@ -1,4 +1,5 @@
-# jwt-auth [![npm version](https://badge.fury.io/js/fwsp-jwt-auth.svg)](https://badge.fury.io/js/fwsp-jwt-auth) <span class="badge-npmdownloads"><a href="https://npmjs.org/package/fwsp-jwt-auth" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/fwsp-jwt-auth.svg" alt="NPM downloads" /></a></span> [![Build Status](https://travis-ci.org/flywheelsports/fwsp-jwt-auth.svg?branch=master)](https://travis-ci.org/flywheelsports/fwsp-jwt-auth)
+# jwt-auth [![npm version](https://badge.fury.io/js/fwsp-jwt-auth.svg)](https://badge.fury.io/js/fwsp-jwt-auth) [![Build Status](https://travis-ci.org/flywheelsports/fwsp-jwt-auth.svg?branch=master)](https://travis-ci.org/flywheelsports/fwsp-jwt-auth) <span class="badge-npmdownloads"><a href="https://npmjs.org/package/fwsp-jwt-auth" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/fwsp-jwt-auth.svg" alt="NPM downloads" /></a></span>
+
 [JSON Web Token](https://en.wikipedia.org/wiki/JSON_Web_Token) Authentication.
 
 ### Using jwt-auth
