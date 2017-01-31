@@ -6,12 +6,17 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const crypto = require('crypto');
 
+const {
+  TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
+} = require('./consts');
+
 class JWTToken {
   constructor() {
     this.privateCert = null;
     this.publicCert = null;
     this.options = {
-      tokenExpirationInSeconds: 3600
+      tokenExpirationInSeconds: 3600,
+      refreshTokenExpirationInSeconds: 3600
     };
   }
 
@@ -78,18 +83,25 @@ class JWTToken {
   * @name createToken
   * @summary Create a signed JSON web token
   * @param {object} payload - user level payload to merge into token
+  * @param {number} type - type of token (access or refresh) to generate
   * @return {object} promise -
   */
-  createToken(payload) {
+  createToken(payload, type = TOKEN_TYPE_ACCESS) {
     return new Promise((resolve, reject) => {
       if (!this.privateCert) {
         reject(new Error('Private certificate wasn\'t loaded in loadCerts call.'));
         return;
       }
+
+      let tokenLifetime = type == TOKEN_TYPE_ACCESS ?
+        this.options.tokenExpirationInSeconds :
+        this.options.refreshTokenExpirationInSeconds;
       payload = Object.assign(payload, {
         issuer: 'urn:auth',
-        exp: Math.floor(Date.now() / 1000) + this.options.tokenExpirationInSeconds
+        exp: Math.floor(Date.now() / 1000) + tokenLifetime,
+        token_type: type
       });
+
       jwt.sign(payload, this.privateCert, { algorithm: 'RS256' }, (err, token) => {
         if (err) {
           reject(err);
@@ -98,6 +110,14 @@ class JWTToken {
         }
       });
     });
+  }
+
+  createAccessToken(payload) {
+    return this.createToken(payload, TOKEN_TYPE_ACCESS);
+  }
+
+  createRefreshToken(payload) {
+    return this.createToken(payload, TOKEN_TYPE_REFRESH);
   }
 
   /**
@@ -123,27 +143,22 @@ class JWTToken {
   }
 
   /**
-  * @name refreshToken
+  * @name executeRefreshToken
   * @summary Refresh a valid token
   * @param {string} token - JSON web token
   * @return {object} promise -
   */
-  refreshToken(token) {
-    return new Promise((resolve, reject) => {
-      return this.verifyToken(token)
-        .then((data) => {
-          return this.createToken(data)
-            .then((newToken) => {
-              resolve(newToken);
-            })
-            .catch((err) => {
-              reject(err);
-            });
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  executeRefreshToken(token) {
+    return this.verifyToken(token)
+      .tap(data => { // Tap is used here to not alter the return value of the verify token promise
+        if (data.token_type !== TOKEN_TYPE_REFRESH) {
+          throw new Error('Invalid token type');
+        }
+      })
+      .tap(() => // Tap is used here to not alter the return value of the verify token promise
+        this.checkIfRefreshTokenUsed(token)
+          .then(hash => this.markRefreshTokenUsed(hash))
+      );
   }
 
   /**
@@ -156,6 +171,29 @@ class JWTToken {
     let sha1 = crypto.createHash('sha1');
     sha1.update(token);
     return sha1.digest('hex');
+  }
+
+  /**
+   * @description Helper function to determine if a refresh token has already been used
+   * @param {string} token - JWT refresh token to check
+   * @returns {Promise} Promise resolved with token hash if not used, rejected otherwise
+   */
+  checkIfRefreshTokenUsed(token) {
+    let hash = this.getTokenHash(token);
+    return new Promise((resolve, reject) => {
+      resolve(hash);
+    });
+  }
+
+  /**
+   * @description Marks a JWT refresh token hash as used
+   * @param {string} hash - JWT refresh token hash
+   * @returns {Promise} Promise resolved when token has been marked as used
+   */
+  markRefreshTokenUsed(hash) {
+    return new Promise((resolve, reject) => {
+      resolve();
+    });
   }
 }
 
