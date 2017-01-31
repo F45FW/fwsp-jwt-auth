@@ -7,7 +7,7 @@
     "email": "carlos.justiniano@gmail.com"
   },
   "scripts": {
-    "test": "mocha specs --reporter spec || true"
+    "test": "mocha specs --reporter spec"
   },
   "engines": {
     "node": ">=6.2.1"
