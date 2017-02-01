@@ -18,6 +18,7 @@ class JWTToken {
       tokenExpirationInSeconds: 3600,
       refreshTokenExpirationInSeconds: 3600
     };
+    this.tokenStorageManager = null;
   }
 
   /**
@@ -77,6 +78,10 @@ class JWTToken {
   */
   getPublicCert() {
     return this.publicCert;
+  }
+
+  setTokenStorageManager(manager) {
+    this.tokenStorageManager = manager;
   }
 
   /**
@@ -180,9 +185,7 @@ class JWTToken {
    */
   checkIfRefreshTokenUsed(token) {
     let hash = this.getTokenHash(token);
-    return new Promise((resolve, reject) => {
-      resolve(hash);
-    });
+    return this.tokenStorageManager ? this.tokenStorageManager.isTokenUsed(hash) : Promise.resolve(hash);
   }
 
   /**
@@ -191,9 +194,7 @@ class JWTToken {
    * @returns {Promise} Promise resolved when token has been marked as used
    */
   markRefreshTokenUsed(hash) {
-    return new Promise((resolve, reject) => {
-      resolve();
-    });
+    return this.tokenStorageManager ? this.tokenStorageManager.markTokenUsed(hash) : Promise.resolve();
   }
 }
 

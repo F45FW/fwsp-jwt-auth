@@ -7,7 +7,7 @@
     "email": "carlos.justiniano@gmail.com"
   },
   "scripts": {
-    "test": "mocha specs --reporter spec"
+    "test": "mocha specs"
   },
   "engines": {
     "node": ">=6.2.1"
@@ -24,6 +24,7 @@
   "dependencies": {
     "bluebird": "3.4.6",
     "chai-as-promised": "^6.0.0",
+    "fwsp-cacher": "^1.0.2",
     "jsonwebtoken": "7.2.1"
   },
   "devDependencies": {

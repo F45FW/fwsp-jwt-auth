@@ -16,6 +16,8 @@ const {
   TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
 } = require('../consts');
 
+const { MemoryTokenStorageManager } = require('../token-storage');
+
 const payload = {
   userID: 34,
   admin: true
@@ -27,11 +29,11 @@ const wait = ms => {
       setTimeout(resolve, ms);
     });
   };
-}
+};
 
 const now = () => {
   return Math.floor(Date.now() / 1000);
-}
+};
 
 describe('jwt-auth', () => {
   it('should be able to change default options', () => {
@@ -211,9 +213,13 @@ describe('jwt-auth', () => {
   });
 
   it('should fail to execute a refresh of a used refresh token', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
     jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
+
     let p = jwtAuth.loadCerts('./server.pem', './server.pub')
       .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(token => jwtAuth.executeRefreshToken(token))
       .then(token => jwtAuth.executeRefreshToken(token));
 
     return expect(p).to.be.rejected;
@@ -249,7 +255,9 @@ describe('jwt-auth', () => {
   });
 
   it('should be able to check if an unused refresh token has been used', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
     jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
 
     let hash;
     let p = jwtAuth.loadCerts('./server.pem', './server.pub')
@@ -264,10 +272,13 @@ describe('jwt-auth', () => {
   });
 
   it('should be able to check if a used refresh token has been used', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
     jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
 
     let p = jwtAuth.loadCerts('./server.pem', './server.pub')
       .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(token => jwtAuth.executeRefreshToken(token))
       .then(token => jwtAuth.checkIfRefreshTokenUsed(token));
 
     return expect(p).to.be.rejected;
