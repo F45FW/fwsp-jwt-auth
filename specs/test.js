@@ -12,19 +12,39 @@ jwtAuth.init({
   tokenExpirationInSeconds: 10
 });
 
+const {
+  TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
+} = require('../consts');
+
+const { MemoryTokenStorageManager } = require('../token-storage');
+
 const payload = {
   userID: 34,
   admin: true
 };
 
+const wait = ms => {
+  return () => {
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
+  };
+};
+
+const now = () => {
+  return Math.floor(Date.now() / 1000);
+};
+
 describe('jwt-auth', () => {
   it('should be able to change default options', () => {
     jwtAuth.init({
-      tokenExpirationInSeconds: 100
+      tokenExpirationInSeconds: 100,
+      refreshTokenExpirationInSeconds: 100
     });
     let options = jwtAuth.getOptions();
     expect(options).to.be.an('object');
     expect(options.tokenExpirationInSeconds).to.equal(100);
+    expect(options.refreshTokenExpirationInSeconds).to.equal(100);
   });
 
   it('should fail to load misnamed cert', (done) => {
@@ -142,52 +162,80 @@ describe('jwt-auth', () => {
       });
   });
 
-  it('should be able to obtain a new token given a valid token', (done) => {
+
+  it('should be able to create an access token', () => {
+    const ACCESS_EXP = 100;
     jwtAuth.init({
-      tokenExpirationInSeconds: 5
+      tokenExpirationInSeconds: ACCESS_EXP,
+      refreshTokenExpirationInSeconds: 1000
     });
-    jwtAuth.loadCerts('./server.pem', './server.pub')
-      .then((result) => {
-        jwtAuth.createToken(payload)
-          .then((token) => {
-            jwtAuth.verifyToken(token)
-              .then((result) => {
-                // delay refresh token because a token refreshed within the same
-                // time second will return the same token value.
-                setTimeout(() => {
-                  jwtAuth.refreshToken(token)
-                    .then((newToken) => {
-                      expect(newToken).to.be.a('string');
-                      expect(newToken).to.not.equal(token);
-                      done();
-                    });
-                }, 1500);
-              });
-          });
+    return jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createAccessToken(payload))
+      .then(token => jwtAuth.verifyToken(token))
+      .then(res => {
+        expect(res.token_type).to.equal(TOKEN_TYPE_ACCESS);
+        expect(res.exp - now()).to.be.closeTo(ACCESS_EXP, 2);
       });
   });
 
-  it('should fail to obtain a new token given an invalid token', (done) => {
+  it('should be able to create a refresh token', () => {
+    const REFRESH_EXP = 100;
     jwtAuth.init({
-      tokenExpirationInSeconds: 1
+      tokenExpirationInSeconds: 1000,
+      refreshTokenExpirationInSeconds: REFRESH_EXP
     });
-    jwtAuth.loadCerts('./server.pem', './server.pub')
-      .then((result) => {
-        jwtAuth.createToken(payload)
-          .then((token) => {
-            jwtAuth.verifyToken(token)
-              .then((result) => {
-                // delay refresh token so that original token ends up expiring.
-                setTimeout(() => {
-                  jwtAuth.refreshToken(token)
-                  .catch((err) => {
-                    expect(err.message.indexOf('jwt expired')).to.be.above(-1);
-                    done();
-                  });
-                }, 1500);
-              });
-          });
+    return jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .then(token => jwtAuth.verifyToken(token))
+      .then(res => {
+        expect(res.token_type).to.equal(TOKEN_TYPE_REFRESH);
+        expect(res.exp - now()).to.be.closeTo(REFRESH_EXP, 2);
       });
+  });
+
+  it('should be able to execute a refresh of an unused refresh token', () => {
+    jwtAuth.init({});
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .then(token => jwtAuth.executeRefreshToken(token))
+      .then(data => expect(data).to.contain.all.keys(payload))
+
+    return expect(p).to.be.fulfilled;
+  });
+
+  it('should fail to execute a refresh of an access token', () => {
+    jwtAuth.init({});
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createAccessToken(payload))
+      .then(token => jwtAuth.executeRefreshToken(token));
+
+    return expect(p).to.be.rejected;
+  });
+
+  it('should fail to execute a refresh of a used refresh token', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
+    jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
+
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(token => jwtAuth.executeRefreshToken(token))
+      .then(token => jwtAuth.executeRefreshToken(token));
+
+    return expect(p).to.be.rejected;
+  });
+
+  it('should fail to execute a refresh of an expired refresh token', () => {
+    jwtAuth.init({
+      refreshTokenExpirationInSeconds: 1
+    });
+
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(wait(1000))
+      .then(token => jwtAuth.executeRefreshToken(token));
+
+    return expect(p).to.be.rejected;
   });
 
   it('should return a token hash given a token', (done) => {
@@ -204,5 +252,35 @@ describe('jwt-auth', () => {
             done();
           });
       });
+  });
+
+  it('should be able to check if an unused refresh token has been used', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
+    jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
+
+    let hash;
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(token => {
+        hash = jwtAuth.getTokenHash(token);
+      })
+      .then(token => jwtAuth.checkIfRefreshTokenUsed(token))
+      .tap(_hash => expect(_hash).to.equal(hash));
+
+    return expect(p).to.be.fulfilled;
+  });
+
+  it('should be able to check if a used refresh token has been used', () => {
+    let tokenStorageManager = new MemoryTokenStorageManager();
+    jwtAuth.init({});
+    jwtAuth.setTokenStorageManager(tokenStorageManager);
+
+    let p = jwtAuth.loadCerts('./server.pem', './server.pub')
+      .then(() => jwtAuth.createRefreshToken(payload))
+      .tap(token => jwtAuth.executeRefreshToken(token))
+      .then(token => jwtAuth.checkIfRefreshTokenUsed(token));
+
+    return expect(p).to.be.rejected;
   });
 });
