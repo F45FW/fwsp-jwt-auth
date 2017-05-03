@@ -1,6 +1,6 @@
 {
   "name": "fwsp-jwt-auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JSON Web Token Authentication Helper",
   "author": {
     "name": "Carlos Justiniano",
@@ -23,12 +23,12 @@
   "homepage": "https://github.com/flywheelsports/fwsp-jwt-auth#readme",
   "dependencies": {
     "bluebird": "3.4.6",
-    "chai-as-promised": "^6.0.0",
     "fwsp-cacher": "^1.0.2",
     "jsonwebtoken": "7.2.1"
   },
   "devDependencies": {
     "chai": "3.5.0",
+    "chai-as-promised": "^6.0.0",
     "eslint": "3.12.2",
     "eslint-plugin-jasmine": "2.2.0",
     "mocha": "3.2.0"
