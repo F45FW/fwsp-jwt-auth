@@ -13,6 +13,7 @@ const {
 class JWTToken {
   constructor() {
     this.privateCert = null;
+    this.privateCertPassphrase = null;
     this.publicCert = null;
     this.options = {
       tokenExpirationInSeconds: 3600,
@@ -46,11 +47,14 @@ class JWTToken {
   * @param {string} publicCertPath - path to public certificate
   * @return {object} promise -
   */
-  loadCerts(privateCertPath, publicCertPath) {
+  loadCerts(privateCertPath, publicCertPath, privateCertPassphrase) {
     return new Promise((resolve, reject) => {
       try {
         if (privateCertPath) {
           this.privateCert = fs.readFileSync(privateCertPath);
+        }
+        if (privateCertPassphrase) {
+          this.privateCertPassphrase = privateCertPassphrase;
         }
         if (publicCertPath) {
           this.publicCert = fs.readFileSync(publicCertPath);
@@ -107,7 +111,7 @@ class JWTToken {
         token_type: type
       });
 
-      jwt.sign(payload, this.privateCert, { algorithm: 'RS256' }, (err, token) => {
+      jwt.sign(payload, {key: this.privateCert, passphrase: this.privateCertPassphrase}, { algorithm: 'RS256' }, (err, token) => {
         if (err) {
           reject(err);
         } else {
